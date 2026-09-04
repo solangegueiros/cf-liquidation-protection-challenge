@@ -2,10 +2,22 @@ node_modules/
 dist/
 .bun/
 *.local
+
+# Secrets — never commit
 .env
 .env.*
 !.env.example
+secrets.yaml
+*.key
+*.pem
+
+# Hardhat
+artifacts/
+cache/
+typechain-types/
+
+# IDE / OS
 .claude/
 .cre_build_tmp.js
-# Do NOT ignore secrets.yaml — commit the template, not real values
-# Real secrets go into your CRE environment variables
+.DS_Store
+Thumbs.db
