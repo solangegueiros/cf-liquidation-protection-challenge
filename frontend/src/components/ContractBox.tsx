@@ -73,16 +73,6 @@ function AddressRow({ label, storageKey, currentValue, onSaved, metamask }: Addr
               {copied ? "✓" : "Copy"}
             </button>
           )}
-          {currentValue && metamask && (
-            <button
-              className="btn-copy"
-              onClick={() => addToMetaMask(currentValue, metamask.symbol, metamask.decimals)}
-              title={`Add ${metamask.symbol} to MetaMask`}
-              style={{ padding: "0.2rem 0.45rem" }}
-            >
-              🦊
-            </button>
-          )}
           <button
             className="btn-copy"
             onClick={() => { setDraft(currentValue); setEditing(true); }}
@@ -91,6 +81,16 @@ function AddressRow({ label, storageKey, currentValue, onSaved, metamask }: Addr
           >
             ✎
           </button>
+          {currentValue && metamask && (
+            <button
+              className="btn-copy"
+              onClick={() => addToMetaMask(currentValue, metamask.symbol, metamask.decimals)}
+              title={`Add ${metamask.symbol} to MetaMask`}
+              style={{ padding: "0.2rem 0.45rem" }}
+            >
+              add to 🦊
+            </button>
+          )}
         </div>
       )}
     </div>
