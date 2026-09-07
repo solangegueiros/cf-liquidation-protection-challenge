@@ -135,7 +135,7 @@ function ProtocolStats({ lendingAddress, enabled }: ProtocolStatsProps) {
           type: "event",
           inputs: [{ name: "user", type: "address", indexed: true }],
         },
-        fromBlock: 0n,
+        fromBlock: 11636254n,
       })
       .then((logs) => setParticipantCount(logs.length))
       .catch(() => setParticipantCount(null));
@@ -681,7 +681,7 @@ function RankingTable({ lendingAddress, connectedAddress, refreshTick }: Ranking
           type: "event",
           inputs: [{ name: "user", type: "address", indexed: true }],
         },
-        fromBlock: 0n,
+        fromBlock: 11636254n,
       });
 
       const addresses = [...new Set(logs.map((l) => l.args.user as `0x${string}`))];
