@@ -2,7 +2,8 @@ import { useState, useCallback, useEffect } from "react";
 import { type Abi } from "viem";
 import { ContractBox } from "@/components/ContractBox";
 import { useWallet } from "@/lib/wallet";
-import { useRead, useWrite } from "@/lib/hooks";
+import { useRead, useWrite, useUserPosition } from "@/lib/hooks";
+import type { UserPosition } from "@/lib/hooks";
 import { publicClient } from "@/lib/client";
 import {
   LENDING_ABI,
@@ -123,23 +124,10 @@ function ProtocolStats({ lendingAddress, enabled }: ProtocolStatsProps) {
     { address: lendingAddress, abi: LENDING_ABI, functionName: "LIQUI_THRESHOLD", enabled },
     [lendingAddress]
   );
-  const [participantCount, setParticipantCount] = useState<number | null>(null);
-
-  useEffect(() => {
-    if (!enabled || !lendingAddress) return;
-    publicClient
-      .getLogs({
-        address: lendingAddress,
-        event: {
-          name: "Join",
-          type: "event",
-          inputs: [{ name: "user", type: "address", indexed: true }],
-        },
-        fromBlock: 11636254n,
-      })
-      .then((logs) => setParticipantCount(logs.length))
-      .catch(() => setParticipantCount(null));
-  }, [lendingAddress, enabled]);
+  const { data: numUsers } = useRead<bigint>(
+    { address: lendingAddress, abi: LENDING_ABI, functionName: "numUsers", enabled },
+    [lendingAddress]
+  );
 
   return (
     <div className="stats-strip" style={{ marginBottom: "2rem" }}>
@@ -151,7 +139,7 @@ function ProtocolStats({ lendingAddress, enabled }: ProtocolStatsProps) {
       </div>
       <div className="stat-chip">
         <span className="stat-chip-label">Participants</span>
-        <span className="stat-chip-value">{participantCount ?? "—"}</span>
+        <span className="stat-chip-value">{numUsers !== undefined ? numUsers.toString() : "—"}</span>
       </div>
       <div className="stat-chip">
         <span className="stat-chip-label">MAX LTV</span>
@@ -179,18 +167,11 @@ function MyPosition({ lendingAddress, address, onRefresh }: MyPositionProps) {
   const vethAddr = getVethAddress();
   const vusdAddr = getVusdAddress();
 
-  const { data: collateral, refetch: refetchCollateral } = useRead<bigint>(
-    { address: lendingAddress, abi: LENDING_ABI, functionName: "userCollateral", args: [address] },
-    [lendingAddress, address]
-  );
-  const { data: debt, refetch: refetchDebt } = useRead<bigint>(
-    { address: lendingAddress, abi: LENDING_ABI, functionName: "userDebt", args: [address] },
-    [lendingAddress, address]
-  );
-  const { data: hf, refetch: refetchHF } = useRead<bigint>(
-    { address: lendingAddress, abi: LENDING_ABI, functionName: "userHF", args: [address] },
-    [lendingAddress, address]
-  );
+  const { data: position, refetch: refetchPosition } = useUserPosition(lendingAddress, LENDING_ABI, address);
+  const collateral = position?.collateral;
+  const debt = position?.debt;
+  const hf = position?.hf;
+
   const { data: vethBal } = useRead<bigint>(
     { address: vethAddr, abi: ERC20_ABI, functionName: "balanceOf", args: [address] },
     [vethAddr, address]
@@ -201,11 +182,9 @@ function MyPosition({ lendingAddress, address, onRefresh }: MyPositionProps) {
   );
 
   const refetchAll = useCallback(() => {
-    refetchCollateral();
-    refetchDebt();
-    refetchHF();
+    refetchPosition();
     onRefresh();
-  }, [refetchCollateral, refetchDebt, refetchHF, onRefresh]);
+  }, [refetchPosition, onRefresh]);
 
   const badge = statusBadge(hf);
 
@@ -673,39 +652,35 @@ function RankingTable({ lendingAddress, connectedAddress, refreshTick }: Ranking
     if (!lendingAddress) return;
     setIsLoading(true);
     try {
-      // Get all user addresses from Join events
-      const logs = await publicClient.getLogs({
+      // Get all user addresses via listUsers()
+      const addresses = await publicClient.readContract({
         address: lendingAddress,
-        event: {
-          name: "Join",
-          type: "event",
-          inputs: [{ name: "user", type: "address", indexed: true }],
-        },
-        fromBlock: 11636254n,
-      });
+        abi: LENDING_ABI as Abi,
+        functionName: "listUsers",
+      }) as readonly `0x${string}`[];
 
-      const addresses = [...new Set(logs.map((l) => l.args.user as `0x${string}`))];
       if (addresses.length === 0) { setEntries([]); setIsLoading(false); return; }
 
-      // Multicall for all positions
-      const calls = addresses.flatMap((addr) => [
-        { address: lendingAddress, abi: LENDING_ABI as Abi, functionName: "userCollateral", args: [addr] },
-        { address: lendingAddress, abi: LENDING_ABI as Abi, functionName: "userDebt", args: [addr] },
-        { address: lendingAddress, abi: LENDING_ABI as Abi, functionName: "userHF", args: [addr] },
-        { address: lendingAddress, abi: LENDING_ABI as Abi, functionName: "cumulativeDebtTime", args: [addr] },
-      ]);
+      // Multicall getUserPosition for each address
+      const calls = addresses.map((addr) => ({
+        address: lendingAddress,
+        abi: LENDING_ABI as Abi,
+        functionName: "getUserPosition",
+        args: [addr],
+      }));
 
       const results = await publicClient.multicall({ allowFailure: true, contracts: calls });
 
       const list: RankEntry[] = addresses.map((addr, i) => {
-        const base = i * 4;
-        const get = (j: number) => results[base + j].status === "success" ? (results[base + j].result as bigint) : 0n;
+        const r = results[i];
+        if (r.status !== "success") return { address: addr, collateral: 0n, debt: 0n, hf: 0n, cumulativeDebtTime: 0n };
+        const pos = r.result as UserPosition;
         return {
           address: addr,
-          collateral: get(0),
-          debt: get(1),
-          hf: get(2),
-          cumulativeDebtTime: get(3),
+          collateral: pos.collateral,
+          debt: pos.debt,
+          hf: pos.hf,
+          cumulativeDebtTime: pos.cumulativeDebtTime,
         };
       });
 

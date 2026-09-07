@@ -42,12 +42,13 @@ export function useRead<T>(config: ReadConfig, deps: unknown[] = []) {
   return { data, isLoading, error, refetch: fetch };
 }
 
-// ─── User Position (multicall) ───────────────────────────────────────────────
+// ─── User Position ───────────────────────────────────────────────────────────
 
 export interface UserPosition {
   collateral: bigint;
   debt: bigint;
   hf: bigint;
+  lastUpdateTime: bigint;
   cumulativeDebtTime: bigint;
 }
 
@@ -63,24 +64,13 @@ export function useUserPosition(
     if (!userAddress || !lendingAddress) return;
     setIsLoading(true);
     try {
-      const results = await publicClient.multicall({
-        allowFailure: true,
-        contracts: [
-          { address: lendingAddress, abi: abi as Abi, functionName: "userCollateral", args: [userAddress] },
-          { address: lendingAddress, abi: abi as Abi, functionName: "userDebt", args: [userAddress] },
-          { address: lendingAddress, abi: abi as Abi, functionName: "userHF", args: [userAddress] },
-          { address: lendingAddress, abi: abi as Abi, functionName: "cumulativeDebtTime", args: [userAddress] },
-        ],
-      });
-      const ok = results.every((r) => r.status === "success");
-      if (ok) {
-        setData({
-          collateral: results[0].result as bigint,
-          debt: results[1].result as bigint,
-          hf: results[2].result as bigint,
-          cumulativeDebtTime: results[3].result as bigint,
-        });
-      }
+      const result = await publicClient.readContract({
+        address: lendingAddress,
+        abi: abi as Abi,
+        functionName: "getUserPosition",
+        args: [userAddress],
+      }) as UserPosition;
+      setData(result);
     } catch {
       // ignore
     } finally {
