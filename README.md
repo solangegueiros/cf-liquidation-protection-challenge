@@ -1,6 +1,7 @@
 # Automated Liquidation Protection Challenge 
 # using CRE Confidential Workflows
 
+## Challenge official smart contracts
 
 Tokens ERC20 (Ethereum Sepolia):
 - virtual ETH - vETH - [0x89F0DF6D4629D494D599E03505C323537C24667a](https://sepolia.etherscan.io/address/0x89F0DF6D4629D494D599E03505C323537C24667a)
@@ -24,15 +25,16 @@ The workflow must:
 
 You can create and deploy your workflow until the hackathon submission deadline.
 
-Fork this repo and do local simulations, or even test your workflow yourself, deploying a personal challenge smart contract / tokens.
+Fork this repo to do local simulations, or even test your workflow yourself, deploying a personal challenge smart contract / tokens. 
+If you deploy your own contracts, in order to use the function join, you need to grant the minter role to the challenge contract, in both tokens (The function join mint tokens, so it must be in the role).
 
-Until the hackathon submission deadline, update your workflow to join the official challenge, using the smart contract addresses defined on this readme file.
+Until the hackathon submission deadline, update your workflow to use the official challenge smart contract address, defined on this readme file.
 
 Use the function `join()` to join the challenge in the official smart contract.
 
 > Join from Sept 8 to hackathon submission deadline.
 
-After the deadline, Chainlink team will run the scenarios, during the next 24h and discover the winner.
+After the deadline, Chainlink team will run the scenarios, during the next 24h, and discover the winner.
 
 > You can not update your workflow after the hackathon submission deadline.
 
