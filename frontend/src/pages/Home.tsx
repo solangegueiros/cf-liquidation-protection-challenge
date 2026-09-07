@@ -215,7 +215,7 @@ function MyPosition({ lendingAddress, address, onRefresh }: MyPositionProps) {
         <h2 className="subhead" style={{ margin: 0 }}>My Position</h2>
         <button className="btn btn-sm btn-secondary" onClick={refetchAll}>Refresh</button>
       </div>
-      <div className="stat-grid" style={{ gridTemplateColumns: "repeat(2, 1fr)", marginBottom: "1rem" }}>
+      <div className="stat-grid" style={{ gridTemplateColumns: "repeat(4, 1fr)", marginBottom: "1rem" }}>
         <div className="stat">
           <div className="stat-label">Collateral</div>
           <div className="stat-value">{fmtUnits(collateral)} vETH</div>
