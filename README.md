@@ -203,3 +203,86 @@ npm run build
 ```
 
 Output is in `frontend/dist/`.
+
+---
+
+## The workflow — automated-liquidation-protection-workflow
+
+A confidential CRE workflow that monitors your position on-chain and automatically repays debt or deposits collateral when the health factor drops below your private threshold.
+
+**Architecture:**
+- Runs inside a Nitro TEE (`handlerInTee`) — decision logic and private key never leave the enclave
+- Reads position state directly from `ChallengeLending` via Ethereum JSON-RPC (`getUserPosition`, `vETHPrice`)
+- Executes `repay()` and `deposit()` by signing transactions inside the TEE with the private key from CRE secrets
+
+### Requirements
+
+- [CRE CLI](https://docs.chain.link/cre/guides/cli/overview) installed
+- [Bun](https://bun.sh/) >= 1.2.21
+- CRE account with Early Access (for deployment; simulation works without it)
+- The wallet (`CRE_ETH_PRIVATE_KEY`) must have already called `join()` on the challenge contract
+
+### Install
+
+```bash
+cd automated-liquidation-protection-workflow
+bun install
+```
+
+### Configure secrets
+
+Copy `.env.example` to `.env` and fill in your private values:
+
+```bash
+cp .env.example .env
+```
+
+Set the policy parameters in `.env`:
+
+```
+# Ethereum private key (same wallet that called join())
+CRE_ETH_PRIVATE_KEY=0x...
+
+# Trigger intervention when HF drops to or below this value (×100)
+# Example: 108 = HF 1.08
+CRE_LIQUIDATION_MIN_HF_TRIGGER_VAR=108
+
+# Target health factor to restore after intervention (×100)
+# Example: 115 = HF 1.15
+CRE_LIQUIDATION_TARGET_HF_VAR=115
+
+# Maximum percentage of outstanding vUSD debt to repay per intervention
+# Example: 15 = up to 15% of debt
+CRE_LIQUIDATION_MAX_REPAY_PCT_VAR=15
+
+# Maximum vETH collateral to deposit per intervention (raw units, 100 = 1.00 vETH)
+# Example: 300 = up to 3.00 vETH
+CRE_LIQUIDATION_MAX_DEPOSIT_UNITS_VAR=300
+```
+
+> These values define your private strategy. They are loaded as CRE secrets and stay inside the TEE — they never appear on-chain or in logs.
+
+### Simulate
+
+From the **project root** (where `project.yaml` is):
+
+```bash
+cd automated-liquidation-protection-workflow
+cre workflow simulate --target staging-settings
+```
+
+The simulator runs one cron tick locally, reads your position from Sepolia, and logs the decision. No transaction is broadcast during simulation.
+
+### Deploy
+
+```bash
+cre workflow deploy --target production-settings
+```
+
+Requires Early Access approval, a funded wallet linked to your CRE account, and a stable Sepolia RPC.
+
+### Typecheck
+
+```bash
+bun run typecheck
+```
