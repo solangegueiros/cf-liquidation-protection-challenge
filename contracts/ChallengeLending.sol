@@ -311,6 +311,15 @@ contract ChallengeLending is AccessControl {
         }
     }
 
+    /// @notice Return all registered participant addresses.
+    function listUsers() external view returns (address[] memory) {
+        address[] memory list = new address[](users.length);
+        for (uint256 i = 0; i < users.length; i++) {
+            list[i] = users[i];
+        }
+        return list;
+    }
+
     function updatevETHPrice(uint256 price) external onlyRole(ADMIN_ROLE) {
         emit PriceUpdate(vETHPrice, price);
         vETHPrice = price;
