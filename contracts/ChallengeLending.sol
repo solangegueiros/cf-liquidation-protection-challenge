@@ -268,6 +268,19 @@ contract ChallengeLending is AccessControl {
     }
 
     // -------------------------------------------------------------------------
+    // Viewers
+    // -------------------------------------------------------------------------
+
+    /// @notice Return all registered participant addresses.
+    function listUsers() external view returns (address[] memory) {
+        address[] memory list = new address[](users.length);
+        for (uint256 i = 0; i < users.length; i++) {
+            list[i] = users[i];
+        }
+        return list;
+    }
+
+    // -------------------------------------------------------------------------
     // Admin
     // -------------------------------------------------------------------------
 
@@ -311,15 +324,6 @@ contract ChallengeLending is AccessControl {
             loanContinuityScore[user] = score;
             emit LoanContinuityScored(user, score);
         }
-    }
-
-    /// @notice Return all registered participant addresses.
-    function listUsers() external view returns (address[] memory) {
-        address[] memory list = new address[](users.length);
-        for (uint256 i = 0; i < users.length; i++) {
-            list[i] = users[i];
-        }
-        return list;
     }
 
     function updatevETHPrice(uint256 price) external onlyRole(ADMIN_ROLE) {
