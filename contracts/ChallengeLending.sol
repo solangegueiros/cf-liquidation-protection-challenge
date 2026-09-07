@@ -34,6 +34,7 @@ contract ChallengeLending is AccessControl {
     uint256 public start_Debt = 700000;     // 7000.00 vUSD initial debt on join
 
     address[] public users;
+    uint256 public numUsers;
     mapping(address => bool)    public isUser;
     mapping(address => uint256) public userCollateral;      // vETH units
     mapping(address => uint256) public userDebt;            // vUSD units
@@ -127,6 +128,7 @@ contract ChallengeLending is AccessControl {
         require(!isUser[msg.sender], "Already joined");
         users.push(msg.sender);
         isUser[msg.sender] = true;
+        numUsers++;
 
         // Mint free tokens (everything above the locked amounts)
         vETH.mint(msg.sender, start_vETH - start_Collateral);
