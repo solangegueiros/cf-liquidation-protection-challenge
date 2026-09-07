@@ -1,0 +1,14 @@
+{
+  "schedule": "0 */5 * * * *",
+  "rpc_url": "https://ethereum-sepolia-rpc.publicnode.com",
+  "lending_address": "0x63b918368a2c3c08f3b3eCEdc8eA6c49E674c4B7",
+  "veth_address": "0x89F0DF6D4629D494D599E03505C323537C24667a",
+  "vusd_address": "0xC96c007023Ae2a23D097D5D95d4b91D6a501Da0b",
+  "secrets_ids": {
+    "private_key_id": "liquidation_private_key",
+    "min_hf_trigger_id": "liquidation_min_hf_trigger",
+    "target_hf_id": "liquidation_target_hf",
+    "max_repay_pct_id": "liquidation_max_repay_pct",
+    "max_deposit_units_id": "liquidation_max_deposit_units"
+  }
+}

@@ -1,0 +1,20 @@
+# ==========================================================================
+# CRE PROJECT SETTINGS FILE
+# ==========================================================================
+# Project-specific settings for CRE CLI targets.
+#
+# RPC URLs support ${VAR_NAME} syntax to reference environment variables.
+# Example:
+#   url: https://rpc.example.com/${CRE_SECRET_RPC_SEPOLIA}
+
+# ==========================================================================
+staging-settings:
+  rpcs:
+    - chain-name: ethereum-testnet-sepolia
+      url: https://ethereum-sepolia-rpc.publicnode.com
+
+# ==========================================================================
+production-settings:
+  rpcs:
+    - chain-name: ethereum-testnet-sepolia
+      url: https://ethereum-sepolia-rpc.publicnode.com
