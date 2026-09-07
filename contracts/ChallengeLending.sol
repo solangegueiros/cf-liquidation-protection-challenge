@@ -33,15 +33,18 @@ contract ChallengeLending is AccessControl {
     uint256 public start_Collateral = 500;  // 5.00 vETH locked as collateral on join
     uint256 public start_Debt = 700000;     // 7000.00 vUSD initial debt on join
 
-    address[] public users;
-    mapping(address => bool)    public isUser;
-    mapping(address => uint256) public userCollateral;      // vETH units
-    mapping(address => uint256) public userDebt;            // vUSD units
-    mapping(address => uint256) public userHF;              // health factor ×100
+    struct userPosition {
+        uint256 collateral;       // vETH units
+        uint256 debt;             // vUSD units
+        uint256 hf;               // health factor ×100
+        uint256 lastUpdateTime;   // timestamp of last debt change
+        uint256 cumulativeDebtTime; // sum of (debt × elapsed seconds)
+    }
 
-    // Time-weighted debt tracking (for loan-continuity scoring)
-    mapping(address => uint256) public lastUpdateTime;      // timestamp of last debt change
-    mapping(address => uint256) public cumulativeDebtTime;  // sum of (debt × elapsed seconds)
+    address[] public users;
+    uint256 public numUsers;
+    mapping(address => bool)         public isUser;
+    mapping(address => userPosition) public positions;
 
     // Registration gate — join() reverts unless this is true
     bool public challengeOpen;
@@ -103,18 +106,18 @@ contract ChallengeLending is AccessControl {
     ///      Time only counts between scenarioStartTime and scenarioEndTime (or now if
     ///      not yet stopped), so all participants share the same scoring window.
     function _updateDebtTime(address user) internal {
-        if (lastUpdateTime[user] != 0 && scenarioStartTime > 0) {
-            uint256 from = lastUpdateTime[user] < scenarioStartTime
+        if (positions[user].lastUpdateTime != 0 && scenarioStartTime > 0) {
+            uint256 from = positions[user].lastUpdateTime < scenarioStartTime
                 ? scenarioStartTime
-                : lastUpdateTime[user];
+                : positions[user].lastUpdateTime;
             uint256 to = (scenarioEndTime > 0 && block.timestamp > scenarioEndTime)
                 ? scenarioEndTime
                 : block.timestamp;
             if (to > from) {
-                cumulativeDebtTime[user] += userDebt[user] * (to - from);
+                positions[user].cumulativeDebtTime += positions[user].debt * (to - from);
             }
         }
-        lastUpdateTime[user] = block.timestamp;
+        positions[user].lastUpdateTime = block.timestamp;
     }
 
     // -------------------------------------------------------------------------
@@ -127,6 +130,7 @@ contract ChallengeLending is AccessControl {
         require(!isUser[msg.sender], "Already joined");
         users.push(msg.sender);
         isUser[msg.sender] = true;
+        numUsers++;
 
         // Mint free tokens (everything above the locked amounts)
         vETH.mint(msg.sender, start_vETH - start_Collateral);
@@ -134,11 +138,11 @@ contract ChallengeLending is AccessControl {
 
         // Lock collateral and record debt in the contract
         vETH.mint(address(this), start_Collateral);
-        userCollateral[msg.sender] = start_Collateral;
+        positions[msg.sender].collateral = start_Collateral;
         vUSD.mint(address(this), start_Debt);
-        userDebt[msg.sender] = start_Debt;
+        positions[msg.sender].debt = start_Debt;
 
-        lastUpdateTime[msg.sender] = block.timestamp;
+        positions[msg.sender].lastUpdateTime = block.timestamp;
         calcHF(msg.sender);
         emit Join(msg.sender);
     }
@@ -147,7 +151,7 @@ contract ChallengeLending is AccessControl {
     function deposit(uint256 amount) external onlyActive {
         require(isUser[msg.sender], "Not a participant");
         require(vETH.transferFrom(msg.sender, address(this), amount), "Transfer failed");
-        userCollateral[msg.sender] += amount;
+        positions[msg.sender].collateral += amount;
         calcHF(msg.sender);
         emit Deposit(msg.sender, amount);
     }
@@ -157,12 +161,12 @@ contract ChallengeLending is AccessControl {
         require(isUser[msg.sender], "Not a participant");
         // Check total debt (existing + new) stays within MAX_LTV
         require(
-            userCollateral[msg.sender] >= minCollateral(userDebt[msg.sender] + amount),
+            positions[msg.sender].collateral >= minCollateral(positions[msg.sender].debt + amount),
             "Insufficient collateral"
         );
         require(vUSD.transfer(msg.sender, amount), "Transfer failed");
         _updateDebtTime(msg.sender);
-        userDebt[msg.sender] += amount;
+        positions[msg.sender].debt += amount;
         calcHF(msg.sender);
         emit Borrow(msg.sender, amount);
     }
@@ -170,10 +174,10 @@ contract ChallengeLending is AccessControl {
     /// @notice Repay vUSD debt.
     function repay(uint256 amount) external onlyActive {
         require(isUser[msg.sender], "Not a participant");
-        require(userDebt[msg.sender] >= amount, "Too much repayment");
+        require(positions[msg.sender].debt >= amount, "Too much repayment");
         require(vUSD.transferFrom(msg.sender, address(this), amount), "Transfer failed");
         _updateDebtTime(msg.sender);
-        userDebt[msg.sender] -= amount;
+        positions[msg.sender].debt -= amount;
         calcHF(msg.sender);
         emit Repay(msg.sender, amount);
     }
@@ -181,10 +185,10 @@ contract ChallengeLending is AccessControl {
     /// @notice Withdraw collateral — only allowed when debt is fully repaid.
     function withdrawCollateral(uint256 amount) external onlyActive {
         require(isUser[msg.sender], "Not a participant");
-        require(userDebt[msg.sender] == 0, "Pay all debt first");
-        require(userCollateral[msg.sender] >= amount, "Not enough collateral");
+        require(positions[msg.sender].debt == 0, "Pay all debt first");
+        require(positions[msg.sender].collateral >= amount, "Not enough collateral");
         require(vETH.transfer(msg.sender, amount), "Transfer failed");
-        userCollateral[msg.sender] -= amount;
+        positions[msg.sender].collateral -= amount;
         calcHF(msg.sender);
         emit WithdrawCollateral(msg.sender, amount);
     }
@@ -210,14 +214,14 @@ contract ChallengeLending is AccessControl {
     ///         HF = (collateral_units × vETHPrice × LIQUI_THRESHOLD) / (100 × debt_units)
     ///         100 = exactly at liquidation threshold (HF 1.00).
     function calcHF(address user) public returns (uint256) {
-        if (userDebt[user] == 0) {
-            userHF[user] = type(uint256).max;
-            return userHF[user];
+        if (positions[user].debt == 0) {
+            positions[user].hf = type(uint256).max;
+            return positions[user].hf;
         }
-        userHF[user] =
-            userCollateral[user] * vETHPrice * LIQUI_THRESHOLD /
-            (100 * userDebt[user]);
-        return userHF[user];
+        positions[user].hf =
+            positions[user].collateral * vETHPrice * LIQUI_THRESHOLD /
+            (100 * positions[user].debt);
+        return positions[user].hf;
     }
 
     /// @notice Admin: recalculate every position and liquidate those at or below HF 1.00.
@@ -225,7 +229,7 @@ contract ChallengeLending is AccessControl {
         for (uint256 i = 0; i < users.length; i++) {
             address user = users[i];
             calcHF(user);
-            if (userHF[user] <= 100) {
+            if (positions[user].hf <= 100) {
                 liquidateUser(user);
             }
         }
@@ -236,8 +240,8 @@ contract ChallengeLending is AccessControl {
     ///         Falls back to full closure if collateral is insufficient.
     function liquidateUser(address user) internal {
         // Collateral value in vUSD units
-        uint256 collateralValue = userCollateral[user] * vETHPrice / 100;
-        uint256 D = userDebt[user];
+        uint256 collateralValue = positions[user].collateral * vETHPrice / 100;
+        uint256 D = positions[user].debt;
 
         // Debt to repay = current debt − target debt at MAX_LTV
         // target_debt = collateral_value × MAX_LTV / 100
@@ -252,17 +256,35 @@ contract ChallengeLending is AccessControl {
         uint256 collateralToSeize = (seizeValueVUSD * 100 + vETHPrice - 1) / vETHPrice;
 
         // If collateral is insufficient, seize everything and close the position
-        if (collateralToSeize > userCollateral[user]) {
-            collateralToSeize = userCollateral[user];
+        if (collateralToSeize > positions[user].collateral) {
+            collateralToSeize = positions[user].collateral;
             debtToRepay = D;
         }
 
         _updateDebtTime(user);
-        userDebt[user] -= debtToRepay;
-        userCollateral[user] -= collateralToSeize;
+        positions[user].debt -= debtToRepay;
+        positions[user].collateral -= collateralToSeize;
         calcHF(user);
 
         emit Liquidated(user, debtToRepay, collateralToSeize);
+    }
+
+    // -------------------------------------------------------------------------
+    // Viewers
+    // -------------------------------------------------------------------------
+
+    /// @notice Return the full position of a given participant.
+    function getUserPosition(address user) external view returns (userPosition memory) {
+        return positions[user];
+    }
+
+    /// @notice Return all registered participant addresses.
+    function listUsers() external view returns (address[] memory) {
+        address[] memory list = new address[](users.length);
+        for (uint256 i = 0; i < users.length; i++) {
+            list[i] = users[i];
+        }
+        return list;
     }
 
     // -------------------------------------------------------------------------
@@ -304,7 +326,7 @@ contract ChallengeLending is AccessControl {
         for (uint256 i = 0; i < users.length; i++) {
             address user = users[i];
             _updateDebtTime(user); // flush pending debt × time up to scenarioEndTime
-            uint256 score = cumulativeDebtTime[user] * 10000 / maxDebtTime;
+            uint256 score = positions[user].cumulativeDebtTime * 10000 / maxDebtTime;
             if (score > 10000) score = 10000; // cap at 100%
             loanContinuityScore[user] = score;
             emit LoanContinuityScored(user, score);

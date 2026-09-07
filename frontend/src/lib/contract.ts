@@ -22,12 +22,20 @@ export const LENDING_ABI = [
   { name: "scenarioEndTime", type: "function", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
   { name: "loanContinuityScore", type: "function", stateMutability: "view", inputs: [{ name: "account", type: "address" }], outputs: [{ type: "uint256" }] },
   { name: "users", type: "function", stateMutability: "view", inputs: [{ name: "index", type: "uint256" }], outputs: [{ type: "address" }] },
+  { name: "numUsers", type: "function", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
   { name: "isUser", type: "function", stateMutability: "view", inputs: [{ name: "account", type: "address" }], outputs: [{ type: "bool" }] },
-  { name: "userCollateral", type: "function", stateMutability: "view", inputs: [{ name: "account", type: "address" }], outputs: [{ type: "uint256" }] },
-  { name: "userDebt", type: "function", stateMutability: "view", inputs: [{ name: "account", type: "address" }], outputs: [{ type: "uint256" }] },
-  { name: "userHF", type: "function", stateMutability: "view", inputs: [{ name: "account", type: "address" }], outputs: [{ type: "uint256" }] },
-  { name: "lastUpdateTime", type: "function", stateMutability: "view", inputs: [{ name: "account", type: "address" }], outputs: [{ type: "uint256" }] },
-  { name: "cumulativeDebtTime", type: "function", stateMutability: "view", inputs: [{ name: "account", type: "address" }], outputs: [{ type: "uint256" }] },
+  {
+    name: "getUserPosition", type: "function", stateMutability: "view",
+    inputs: [{ name: "user", type: "address" }],
+    outputs: [{ type: "tuple", components: [
+      { name: "collateral", type: "uint256" },
+      { name: "debt", type: "uint256" },
+      { name: "hf", type: "uint256" },
+      { name: "lastUpdateTime", type: "uint256" },
+      { name: "cumulativeDebtTime", type: "uint256" },
+    ]}],
+  },
+  { name: "listUsers", type: "function", stateMutability: "view", inputs: [], outputs: [{ type: "address[]" }] },
   { name: "minCollateral", type: "function", stateMutability: "view", inputs: [{ name: "totalDebt", type: "uint256" }], outputs: [{ type: "uint256" }] },
   { name: "hasRole", type: "function", stateMutability: "view", inputs: [{ name: "role", type: "bytes32" }, { name: "account", type: "address" }], outputs: [{ type: "bool" }] },
 
@@ -66,7 +74,7 @@ export const ERC20_ABI = [
 // ─── Address helpers ─────────────────────────────────────────────────────────
 
 export function getLendingAddress(): `0x${string}` {
-  return (localStorage.getItem("lendingAddress") || import.meta.env.CONTRACT_ADDRESS || "0x59d5B29FbA5ca865a171076BE94EbEeC5BCA1E04") as `0x${string}`;
+  return (localStorage.getItem("lendingAddress") || import.meta.env.CONTRACT_ADDRESS || "0x63b918368a2c3c08f3b3eCEdc8eA6c49E674c4B7") as `0x${string}`;
 }
 
 export function getVethAddress(): `0x${string}` {

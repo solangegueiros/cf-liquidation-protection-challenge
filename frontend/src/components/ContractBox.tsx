@@ -1,14 +1,28 @@
 import { useState } from "react";
 import { getLendingAddress, getVethAddress, getVusdAddress } from "@/lib/contract";
 
+async function addToMetaMask(address: string, symbol: string, decimals: number) {
+  const { ethereum } = window as any;
+  if (!ethereum) return;
+  try {
+    await ethereum.request({
+      method: "wallet_watchAsset",
+      params: { type: "ERC20", options: { address, symbol, decimals } },
+    });
+  } catch {
+    // user rejected or MetaMask not available
+  }
+}
+
 interface AddressRowProps {
   label: string;
   storageKey: string;
   currentValue: string;
   onSaved: () => void;
+  metamask?: { symbol: string; decimals: number };
 }
 
-function AddressRow({ label, storageKey, currentValue, onSaved }: AddressRowProps) {
+function AddressRow({ label, storageKey, currentValue, onSaved, metamask }: AddressRowProps) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(currentValue);
   const [copied, setCopied] = useState(false);
@@ -67,6 +81,16 @@ function AddressRow({ label, storageKey, currentValue, onSaved }: AddressRowProp
           >
             ✎
           </button>
+          {currentValue && metamask && (
+            <button
+              className="btn-copy"
+              onClick={() => addToMetaMask(currentValue, metamask.symbol, metamask.decimals)}
+              title={`Add ${metamask.symbol} to MetaMask`}
+              style={{ padding: "0.2rem 0.45rem" }}
+            >
+              add to 🦊
+            </button>
+          )}
         </div>
       )}
     </div>
@@ -94,12 +118,14 @@ export function ContractBox() {
         storageKey="vethAddress"
         currentValue={getVethAddress()}
         onSaved={() => { setTick((t) => t + 1); window.location.reload(); }}
+        metamask={{ symbol: "vETH", decimals: 2 }}
       />
       <AddressRow
         label="vUSD"
         storageKey="vusdAddress"
         currentValue={getVusdAddress()}
         onSaved={() => { setTick((t) => t + 1); window.location.reload(); }}
+        metamask={{ symbol: "vUSD", decimals: 2 }}
       />
     </div>
   );
