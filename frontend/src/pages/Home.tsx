@@ -217,7 +217,7 @@ function MyPosition({ lendingAddress, address, onRefresh }: MyPositionProps) {
           <span style={{ fontSize: "0.875rem", color: "var(--gray-400)" }}>
             Wallet Balances:{" "}
             <strong style={{ color: "#fff" }}>vETH {fmtUnits(vethBal)}</strong>
-            {"  "}
+            <span style={{ display: "inline-block", width: "1.5rem" }} />
             <strong style={{ color: "#fff" }}>vUSD {fmtUnits(vusdBal)}</strong>
           </span>
           <button className="btn btn-sm btn-secondary" onClick={refetchAll}>Refresh</button>
