@@ -273,6 +273,11 @@ contract ChallengeLending is AccessControl {
     // Viewers
     // -------------------------------------------------------------------------
 
+    /// @notice Return the full position of a given participant.
+    function getUserPosition(address user) external view returns (userPosition memory) {
+        return positions[user];
+    }
+
     /// @notice Return all registered participant addresses.
     function listUsers() external view returns (address[] memory) {
         address[] memory list = new address[](users.length);
