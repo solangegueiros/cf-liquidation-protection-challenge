@@ -57,6 +57,34 @@ function fmtDebtTime(raw: bigint): string {
   return `${vUsdDays.toFixed(1)} vUSD·day`;
 }
 
+// ─── MetaMask token helpers ───────────────────────────────────────────────────
+
+async function addToMetaMask(address: string, symbol: string, decimals: number) {
+  const { ethereum } = window as any;
+  if (!ethereum) return;
+  try {
+    await ethereum.request({
+      method: "wallet_watchAsset",
+      params: { type: "ERC20", options: { address, symbol, decimals } },
+    });
+  } catch {
+    // user rejected or MetaMask not available
+  }
+}
+
+function AddToMetaMaskButton({ address, symbol, decimals }: { address: string; symbol: string; decimals: number }) {
+  return (
+    <button
+      className="btn btn-sm btn-secondary"
+      style={{ fontSize: "0.75rem", padding: "0.2rem 0.6rem", gap: "0.25rem", display: "inline-flex", alignItems: "center" }}
+      onClick={() => addToMetaMask(address, symbol, decimals)}
+      title={`Add ${symbol} to MetaMask`}
+    >
+      🦊 Add {symbol}
+    </button>
+  );
+}
+
 // ─── Input helpers ────────────────────────────────────────────────────────────
 
 function displayToUnits(displayVal: string): bigint {
@@ -99,6 +127,41 @@ function ChallengeOpenChip({ lendingAddress, enabled }: { lendingAddress: `0x${s
       <span className="stat-chip-value" style={{ color: isOpen ? "var(--emerald-400)" : "var(--red-400)" }}>
         {isOpen === undefined ? "—" : isOpen ? "Open" : "Closed"}
       </span>
+    </div>
+  );
+}
+
+// ─── Tokens strip ────────────────────────────────────────────────────────────
+
+function TokensStrip() {
+  const vethAddr = getVethAddress();
+  const vusdAddr = getVusdAddress();
+  return (
+    <div style={{ display: "flex", gap: "1rem", flexWrap: "wrap", marginBottom: "1.5rem" }}>
+      {[
+        { addr: vethAddr, symbol: "vETH", decimals: 2 },
+        { addr: vusdAddr, symbol: "vUSD", decimals: 2 },
+      ].map(({ addr, symbol, decimals }) => (
+        <div
+          key={symbol}
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "0.75rem",
+            background: "var(--surface)",
+            border: "1px solid var(--border)",
+            borderRadius: "0.5rem",
+            padding: "0.5rem 0.75rem",
+            fontSize: "0.8rem",
+          }}
+        >
+          <span style={{ color: "var(--emerald-400)", fontWeight: 600 }}>{symbol}</span>
+          <span style={{ fontFamily: "ui-monospace, monospace", color: "var(--gray-400)" }}>
+            {shortAddr(addr)}
+          </span>
+          <AddToMetaMaskButton address={addr} symbol={symbol} decimals={decimals} />
+        </div>
+      ))}
     </div>
   );
 }
@@ -875,6 +938,7 @@ export function HomePage() {
           {/* 2. Protocol stats */}
           <div style={{ marginTop: "2rem" }}>
             <ProtocolStats lendingAddress={lendingAddress} enabled={hasLending} />
+            <TokensStrip />
           </div>
 
           {/* 3. My Position */}
