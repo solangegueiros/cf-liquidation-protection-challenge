@@ -31,7 +31,7 @@ function fmtHF(raw: bigint | undefined): string {
 function hfClass(raw: bigint | undefined): string {
   if (raw === undefined || raw === MAX_U256) return "hf-safe";
   const hf = Number(raw);
-  if (hf > 120) return "hf-safe";
+  if (hf > 107) return "hf-safe";
   if (hf > 100) return "hf-warning";
   return "hf-danger";
 }
@@ -40,7 +40,7 @@ function statusBadge(raw: bigint | undefined): { label: string; cls: string } {
   if (raw === undefined) return { label: "—", cls: "" };
   if (raw === MAX_U256) return { label: "Safe", cls: "badge-safe" };
   const hf = Number(raw);
-  if (hf > 120) return { label: "Safe", cls: "badge-safe" };
+  if (hf > 107) return { label: "Safe", cls: "badge-safe" };
   if (hf > 100) return { label: "At Risk", cls: "badge-warning" };
   return { label: "Liquidatable", cls: "badge-danger" };
 }
