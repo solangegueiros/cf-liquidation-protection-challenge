@@ -213,6 +213,12 @@ function MyPosition({ lendingAddress, address, onRefresh }: MyPositionProps) {
     <div className="panel" style={{ marginBottom: "2rem" }}>
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
         <h2 className="subhead" style={{ margin: 0 }}>My Position</h2>
+        <span style={{ fontSize: "0.875rem", color: "var(--gray-400)" }}>
+          Wallet Balances:{" "}
+          <strong style={{ color: "#fff" }}>vETH {fmtUnits(vethBal)}</strong>
+          {"  "}
+          <strong style={{ color: "#fff" }}>vUSD {fmtUnits(vusdBal)}</strong>
+        </span>
         <button className="btn btn-sm btn-secondary" onClick={refetchAll}>Refresh</button>
       </div>
       <div className="stat-grid" style={{ gridTemplateColumns: "repeat(4, 1fr)", marginBottom: "1rem" }}>
@@ -234,10 +240,6 @@ function MyPosition({ lendingAddress, address, onRefresh }: MyPositionProps) {
             <span className={`badge badge-lg ${badge.cls}`}>{badge.label}</span>
           </div>
         </div>
-      </div>
-      <div style={{ display: "flex", gap: "1.5rem", fontSize: "0.875rem", color: "var(--gray-400)" }}>
-        <span>Wallet vETH: <strong style={{ color: "#fff" }}>{fmtUnits(vethBal)}</strong></span>
-        <span>Wallet vUSD: <strong style={{ color: "#fff" }}>{fmtUnits(vusdBal)}</strong></span>
       </div>
     </div>
   );
