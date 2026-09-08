@@ -376,7 +376,7 @@ function ActionPanel({ lendingAddress, address, onTxSuccess }: ActionPanelProps)
 
       {isActive && needsApprove && (
         <div className="info-box info-pending" style={{ marginBottom: "0.75rem" }}>
-          Approval required — clicking submit will first approve, then {tab}.
+          Approval required — clicking submit will send 2 transactions: first approve, then {tab}.
         </div>
       )}
 

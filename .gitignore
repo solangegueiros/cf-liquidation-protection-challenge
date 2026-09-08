@@ -3,11 +3,10 @@ dist/
 .bun/
 *.local
 
-# Secrets — never commit
+# Env variables — never commit
 .env
 .env.*
 !.env.example
-secrets.yaml
 *.key
 *.pem
 
