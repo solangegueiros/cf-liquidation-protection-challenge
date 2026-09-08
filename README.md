@@ -100,7 +100,6 @@ The Lending and Borrowing / Liquidation Smart Contract is deployed on Ethereum S
 | ----- | ----- | ----- |
 | vETH received | 5.00 vETH | Free balance to use as emergency collateral |
 | vETH collateral | 5.00 vETH | Locked as collateral from the start |
-| vUSD received | 3000.00 vUSD | Free balance to use for emergency repayments |
 | vUSD debt | 7000.00 vUSD | Outstanding debt from the start |
 | Starting HF | ~1.11 | `(5.00 × 2000.00 × 78%) / 7000.00` |
 
