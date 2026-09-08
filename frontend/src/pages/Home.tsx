@@ -160,10 +160,11 @@ function ProtocolStats({ lendingAddress, enabled }: ProtocolStatsProps) {
 interface MyPositionProps {
   lendingAddress: `0x${string}`;
   address: `0x${string}`;
+  refreshTick: number;
   onRefresh: () => void;
 }
 
-function MyPosition({ lendingAddress, address, onRefresh }: MyPositionProps) {
+function MyPosition({ lendingAddress, address, refreshTick, onRefresh }: MyPositionProps) {
   const vethAddr = getVethAddress();
   const vusdAddr = getVusdAddress();
 
@@ -172,19 +173,28 @@ function MyPosition({ lendingAddress, address, onRefresh }: MyPositionProps) {
   const debt = position?.debt;
   const hf = position?.hf;
 
-  const { data: vethBal } = useRead<bigint>(
+  const { data: vethBal, refetch: refetchVeth } = useRead<bigint>(
     { address: vethAddr, abi: ERC20_ABI, functionName: "balanceOf", args: [address] },
     [vethAddr, address]
   );
-  const { data: vusdBal } = useRead<bigint>(
+  const { data: vusdBal, refetch: refetchVusd } = useRead<bigint>(
     { address: vusdAddr, abi: ERC20_ABI, functionName: "balanceOf", args: [address] },
     [vusdAddr, address]
   );
 
+  useEffect(() => {
+    if (refreshTick === 0) return;
+    refetchPosition();
+    refetchVeth();
+    refetchVusd();
+  }, [refreshTick]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const refetchAll = useCallback(() => {
     refetchPosition();
+    refetchVeth();
+    refetchVusd();
     onRefresh();
-  }, [refetchPosition, onRefresh]);
+  }, [refetchPosition, refetchVeth, refetchVusd, onRefresh]);
 
   const badge = statusBadge(hf);
 
@@ -865,6 +875,7 @@ export function HomePage() {
             <MyPosition
               lendingAddress={lendingAddress}
               address={address}
+              refreshTick={refreshTick}
               onRefresh={() => setRefreshTick((t) => t + 1)}
             />
           )}
