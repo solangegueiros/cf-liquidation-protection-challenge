@@ -8,7 +8,7 @@ Tokens ERC20 (Ethereum Sepolia):
 - virtual USD - vUSD - [0x6Fe92Ead5299040f50F095860b5A0A7A2D4041A2](https://sepolia.etherscan.io/address/0x6Fe92Ead5299040f50F095860b5A0A7A2D4041A2)
 
 The Lending and Borrowing / Liquidation Smart Contract Challenge address (Ethereum Sepolia):
-[0x9792b3cc50e1A3e538d8C4655025304F39d8CAb9](https://sepolia.etherscan.io/address/0x9792b3cc50e1A3e538d8C4655025304F39d8CAb9)
+[0x88574e7Cc0027afd04951daa09B64d4441931ba1](https://sepolia.etherscan.io/address/0x88574e7Cc0027afd04951daa09B64d4441931ba1)
 
 # The challenge
 

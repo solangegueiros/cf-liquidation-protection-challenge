@@ -12,7 +12,6 @@ export const LENDING_ABI = [
   { name: "vUSD", type: "function", stateMutability: "view", inputs: [], outputs: [{ type: "address" }] },
   { name: "vETHPrice", type: "function", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
   { name: "start_vETH", type: "function", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
-  { name: "start_vUSD", type: "function", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
   { name: "start_Collateral", type: "function", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
   { name: "start_Debt", type: "function", stateMutability: "view", inputs: [], outputs: [{ type: "uint256" }] },
 
@@ -31,6 +30,7 @@ export const LENDING_ABI = [
       { name: "collateral", type: "uint256" },
       { name: "debt", type: "uint256" },
       { name: "hf", type: "uint256" },
+      { name: "numOperations", type: "uint256" },
       { name: "lastUpdateTime", type: "uint256" },
       { name: "cumulativeDebtTime", type: "uint256" },
     ]}],
