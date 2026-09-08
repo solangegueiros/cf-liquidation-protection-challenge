@@ -109,6 +109,8 @@ button { font-family: inherit; cursor: pointer; }
 }
 .link-btn { background: none; border: none; font-size: 0.875rem; color: var(--gray-400); transition: color 0.15s; }
 .link-btn:hover { color: #fff; }
+.github-btn { display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.875rem; color: var(--gray-400); text-decoration: none; transition: color 0.15s; }
+.github-btn:hover { color: #fff; }
 
 /* ─── Buttons ────────────────────────────────────────────── */
 .btn {

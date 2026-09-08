@@ -8,6 +8,8 @@ interface TokenInterface {
     function balanceOf(address account) external view returns (uint256);
     function decimals() external view returns (uint8);
     function mint(address account, uint256 amount) external;
+    function burn(uint256 value) external;
+    function burnFrom(address account, uint256 value) external;
     function transfer(address to, uint256 value) external returns (bool);
     function transferFrom(address from, address to, uint256 value) external returns (bool);
 }
@@ -29,14 +31,14 @@ contract ChallengeLending is AccessControl {
     TokenInterface public vUSD;
     uint256 public vETHPrice = 200000;      // 2000.00 vUSD per vETH
     uint256 public start_vETH = 1000;       // 10.00 vETH minted to user on join
-    uint256 public start_vUSD = 1000000;    // 10000.00 vUSD minted to user on join
     uint256 public start_Collateral = 500;  // 5.00 vETH locked as collateral on join
-    uint256 public start_Debt = 700000;     // 7000.00 vUSD initial debt on join
+    uint256 public start_Debt = 700000;     // 7000.00 vUSD initial debt on join (also minted to user's wallet)
 
     struct userPosition {
         uint256 collateral;       // vETH units
         uint256 debt;             // vUSD units
         uint256 hf;               // health factor ×100
+        uint256 numOperations;    // count of deposit/borrow/repay/withdrawCollateral calls
         uint256 lastUpdateTime;   // timestamp of last debt change
         uint256 cumulativeDebtTime; // sum of (debt × elapsed seconds)
     }
@@ -132,14 +134,13 @@ contract ChallengeLending is AccessControl {
         isUser[msg.sender] = true;
         numUsers++;
 
-        // Mint free tokens (everything above the locked amounts)
+        // Mint free tokens to the user
         vETH.mint(msg.sender, start_vETH - start_Collateral);
-        vUSD.mint(msg.sender, start_vUSD - start_Debt);
+        vUSD.mint(msg.sender, start_Debt);
 
         // Lock collateral and record debt in the contract
         vETH.mint(address(this), start_Collateral);
         positions[msg.sender].collateral = start_Collateral;
-        vUSD.mint(address(this), start_Debt);
         positions[msg.sender].debt = start_Debt;
 
         positions[msg.sender].lastUpdateTime = block.timestamp;
@@ -152,6 +153,7 @@ contract ChallengeLending is AccessControl {
         require(isUser[msg.sender], "Not a participant");
         require(vETH.transferFrom(msg.sender, address(this), amount), "Transfer failed");
         positions[msg.sender].collateral += amount;
+        positions[msg.sender].numOperations++;
         calcHF(msg.sender);
         emit Deposit(msg.sender, amount);
     }
@@ -164,9 +166,10 @@ contract ChallengeLending is AccessControl {
             positions[msg.sender].collateral >= minCollateral(positions[msg.sender].debt + amount),
             "Insufficient collateral"
         );
-        require(vUSD.transfer(msg.sender, amount), "Transfer failed");
+        vUSD.mint(msg.sender, amount);
         _updateDebtTime(msg.sender);
         positions[msg.sender].debt += amount;
+        positions[msg.sender].numOperations++;
         calcHF(msg.sender);
         emit Borrow(msg.sender, amount);
     }
@@ -175,9 +178,10 @@ contract ChallengeLending is AccessControl {
     function repay(uint256 amount) external onlyActive {
         require(isUser[msg.sender], "Not a participant");
         require(positions[msg.sender].debt >= amount, "Too much repayment");
-        require(vUSD.transferFrom(msg.sender, address(this), amount), "Transfer failed");
+        vUSD.burnFrom(msg.sender, amount);
         _updateDebtTime(msg.sender);
         positions[msg.sender].debt -= amount;
+        positions[msg.sender].numOperations++;
         calcHF(msg.sender);
         emit Repay(msg.sender, amount);
     }
@@ -185,10 +189,14 @@ contract ChallengeLending is AccessControl {
     /// @notice Withdraw collateral — only allowed when debt is fully repaid.
     function withdrawCollateral(uint256 amount) external onlyActive {
         require(isUser[msg.sender], "Not a participant");
-        require(positions[msg.sender].debt == 0, "Pay all debt first");
         require(positions[msg.sender].collateral >= amount, "Not enough collateral");
+        require(
+            positions[msg.sender].collateral - amount >= minCollateral(positions[msg.sender].debt),
+            "Collateral below minimum"
+        );
         require(vETH.transfer(msg.sender, amount), "Transfer failed");
         positions[msg.sender].collateral -= amount;
+        positions[msg.sender].numOperations++;
         calcHF(msg.sender);
         emit WithdrawCollateral(msg.sender, amount);
     }
