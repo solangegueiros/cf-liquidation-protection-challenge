@@ -3,14 +3,14 @@
 ## Index
 
 - [Challenge official smart contracts](#challenge-official-smart-contracts)
-- [The challenge](#the-challenge)
+- [The Challenge](#the-challenge)
   - [How to do it](#how-to-do-it)
   - [The Lending and Borrowing / Liquidation Smart Contract](#the-lending-and-borrowing--liquidation-smart-contract)
-- [The frontend](#the-frontend)
-- [The workflow example](#the-workflow-example--automated-liquidation-protection-workflow)
+- [Frontend](#the-frontend)
+- [CRE Confidential Workflow Example](#the-workflow-example--automated-liquidation-protection-workflow)
 - [Have fun!](#have-fun)
 
-## Challenge official smart contracts
+## Challenge Official Smart Contracts
 
 Tokens ERC20 (Ethereum Sepolia):
 - virtual ETH - vETH - [0x5dED1a40c3D56dA42E7f932f781c0432556c9814](https://sepolia.etherscan.io/address/0x5dED1a40c3D56dA42E7f932f781c0432556c9814)
@@ -19,7 +19,7 @@ Tokens ERC20 (Ethereum Sepolia):
 The Lending and Borrowing / Liquidation Smart Contract Challenge address (Ethereum Sepolia):
 [0x88574e7Cc0027afd04951daa09B64d4441931ba1](https://sepolia.etherscan.io/address/0x88574e7Cc0027afd04951daa09B64d4441931ba1)
 
-# The challenge
+# The Challenge
 
 Build a Confidential Workflow that protects a virtual ETH-collateral/vUSD-debt position during simulated market movements.
 
@@ -184,7 +184,7 @@ The Sepolia contract provides an auditable record of inputs, actions and outcome
 
 ---
 
-## The frontend
+## Frontend
 
 ### Requirements
 
@@ -214,7 +214,9 @@ Output is in `frontend/dist/`.
 
 ---
 
-## The workflow example — automated-liquidation-protection-workflow
+## CRE Confidential Workflow Example
+
+**automated-liquidation-protection-workflow**
 
 A confidential CRE workflow that monitors your position on-chain and automatically repays debt or deposits collateral when the health factor drops below your private threshold.
 
@@ -390,3 +392,7 @@ The workflow now runs on its CRON schedule: every execution happens inside a rea
 > ⚠️ **Production reminder**: check if the template has logs exposing secret values inside the enclave for debugging. Remove every `runtime.log()` inside the TEE handler before any real deployment — anything logged from within a Confidential Workflow could leak the data the enclave is meant to protect.
 
 ## Have fun!
+
+We explained how to use a basic lending and borrowing protocol and create a strategy to avoid liquidation 24h, automatically, using CRE Confidential Workflows.
+
+Now you can do it in the real world!
