@@ -1,5 +1,14 @@
-# Automated Liquidation Protection Challenge 
-# using CRE Confidential Workflows
+# Automated Liquidation Protection Challenge using CRE Confidential Workflows
+
+## Index
+
+- [Challenge official smart contracts](#challenge-official-smart-contracts)
+- [The challenge](#the-challenge)
+  - [How to do it](#how-to-do-it)
+  - [The Lending and Borrowing / Liquidation Smart Contract](#the-lending-and-borrowing--liquidation-smart-contract)
+- [The frontend](#the-frontend)
+- [The workflow example](#the-workflow-example--automated-liquidation-protection-workflow)
+- [Have fun!](#have-fun)
 
 ## Challenge official smart contracts
 
@@ -220,6 +229,12 @@ A confidential CRE workflow that monitors your position on-chain and automatical
 - [Bun](https://bun.sh/) >= 1.2.21
 - CRE account with Early Access (for deployment; simulation works fine without it)
 - The wallet (`CRE_ETH_PRIVATE_KEY`) must have already called `join()` on the challenge contract
+
+### Strategy
+
+This example use a cron trigger. Will it be good? 
+Or an event log trigger when the price is updated is better?
+Up to you :) 
 
 ### Install Dependencies
 
