@@ -48,6 +48,7 @@ export interface UserPosition {
   collateral: bigint;
   debt: bigint;
   hf: bigint;
+  numOperations: bigint;
   lastUpdateTime: bigint;
   cumulativeDebtTime: bigint;
 }

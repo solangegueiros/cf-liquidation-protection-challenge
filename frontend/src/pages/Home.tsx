@@ -160,10 +160,11 @@ function ProtocolStats({ lendingAddress, enabled }: ProtocolStatsProps) {
 interface MyPositionProps {
   lendingAddress: `0x${string}`;
   address: `0x${string}`;
+  refreshTick: number;
   onRefresh: () => void;
 }
 
-function MyPosition({ lendingAddress, address, onRefresh }: MyPositionProps) {
+function MyPosition({ lendingAddress, address, refreshTick, onRefresh }: MyPositionProps) {
   const vethAddr = getVethAddress();
   const vusdAddr = getVusdAddress();
 
@@ -172,19 +173,28 @@ function MyPosition({ lendingAddress, address, onRefresh }: MyPositionProps) {
   const debt = position?.debt;
   const hf = position?.hf;
 
-  const { data: vethBal } = useRead<bigint>(
+  const { data: vethBal, refetch: refetchVeth } = useRead<bigint>(
     { address: vethAddr, abi: ERC20_ABI, functionName: "balanceOf", args: [address] },
     [vethAddr, address]
   );
-  const { data: vusdBal } = useRead<bigint>(
+  const { data: vusdBal, refetch: refetchVusd } = useRead<bigint>(
     { address: vusdAddr, abi: ERC20_ABI, functionName: "balanceOf", args: [address] },
     [vusdAddr, address]
   );
 
+  useEffect(() => {
+    if (refreshTick === 0) return;
+    refetchPosition();
+    refetchVeth();
+    refetchVusd();
+  }, [refreshTick]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const refetchAll = useCallback(() => {
     refetchPosition();
+    refetchVeth();
+    refetchVusd();
     onRefresh();
-  }, [refetchPosition, onRefresh]);
+  }, [refetchPosition, refetchVeth, refetchVusd, onRefresh]);
 
   const badge = statusBadge(hf);
 
@@ -366,7 +376,7 @@ function ActionPanel({ lendingAddress, address, onTxSuccess }: ActionPanelProps)
 
       {isActive && needsApprove && (
         <div className="info-box info-pending" style={{ marginBottom: "0.75rem" }}>
-          Approval required — clicking submit will first approve, then {tab}.
+          Approval required — clicking submit will send 2 transactions: first approve, then {tab}.
         </div>
       )}
 
@@ -635,6 +645,7 @@ interface RankEntry {
   collateral: bigint;
   debt: bigint;
   hf: bigint;
+  numOperations: bigint;
   cumulativeDebtTime: bigint;
 }
 
@@ -673,13 +684,14 @@ function RankingTable({ lendingAddress, connectedAddress, refreshTick }: Ranking
 
       const list: RankEntry[] = addresses.map((addr, i) => {
         const r = results[i];
-        if (r.status !== "success") return { address: addr, collateral: 0n, debt: 0n, hf: 0n, cumulativeDebtTime: 0n };
+        if (r.status !== "success") return { address: addr, collateral: 0n, debt: 0n, hf: 0n, numOperations: 0n, cumulativeDebtTime: 0n };
         const pos = r.result as UserPosition;
         return {
           address: addr,
           collateral: pos.collateral,
           debt: pos.debt,
           hf: pos.hf,
+          numOperations: pos.numOperations,
           cumulativeDebtTime: pos.cumulativeDebtTime,
         };
       });
@@ -736,6 +748,7 @@ function RankingTable({ lendingAddress, connectedAddress, refreshTick }: Ranking
                 <th>Debt</th>
                 <th>Health Factor</th>
                 <th>Status</th>
+                <th>#op</th>
                 <th>Debt-Time Score</th>
               </tr>
             </thead>
@@ -755,6 +768,7 @@ function RankingTable({ lendingAddress, connectedAddress, refreshTick }: Ranking
                     <td>{fmtUnits(e.debt)} vUSD</td>
                     <td className={hfClass(e.hf)}>{fmtHF(e.hf)}</td>
                     <td><span className={`badge ${badge.cls}`}>{badge.label}</span></td>
+                    <td style={{ textAlign: "center", fontSize: "0.85rem" }}>{e.numOperations.toString()}</td>
                     <td style={{ fontSize: "0.8rem", color: "var(--gray-400)" }}>{fmtDebtTime(e.cumulativeDebtTime)}</td>
                   </tr>
                 );
@@ -861,6 +875,7 @@ export function HomePage() {
             <MyPosition
               lendingAddress={lendingAddress}
               address={address}
+              refreshTick={refreshTick}
               onRefresh={() => setRefreshTick((t) => t + 1)}
             />
           )}

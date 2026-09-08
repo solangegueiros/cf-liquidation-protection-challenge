@@ -1,7 +1,16 @@
-# Automated Liquidation Protection Challenge 
-# using CRE Confidential Workflows
+# Automated Liquidation Protection Challenge using CRE Confidential Workflows
 
-## Challenge official smart contracts
+## Index
+
+- [Challenge official smart contracts](#challenge-official-smart-contracts)
+- [The Challenge](#the-challenge)
+  - [How to do it](#how-to-do-it)
+  - [The Lending and Borrowing / Liquidation Smart Contract](#the-lending-and-borrowing--liquidation-smart-contract)
+- [Frontend](#the-frontend)
+- [CRE Confidential Workflow Example](#the-workflow-example--automated-liquidation-protection-workflow)
+- [Have fun!](#have-fun)
+
+## Challenge Official Smart Contracts
 
 Tokens ERC20 (Ethereum Sepolia):
 - virtual ETH - vETH - [0x5dED1a40c3D56dA42E7f932f781c0432556c9814](https://sepolia.etherscan.io/address/0x5dED1a40c3D56dA42E7f932f781c0432556c9814)
@@ -10,7 +19,7 @@ Tokens ERC20 (Ethereum Sepolia):
 The Lending and Borrowing / Liquidation Smart Contract Challenge address (Ethereum Sepolia):
 [0x88574e7Cc0027afd04951daa09B64d4441931ba1](https://sepolia.etherscan.io/address/0x88574e7Cc0027afd04951daa09B64d4441931ba1)
 
-# The challenge
+# The Challenge
 
 Build a Confidential Workflow that protects a virtual ETH-collateral/vUSD-debt position during simulated market movements.
 
@@ -100,7 +109,6 @@ The Lending and Borrowing / Liquidation Smart Contract is deployed on Ethereum S
 | ----- | ----- | ----- |
 | vETH received | 5.00 vETH | Free balance to use as emergency collateral |
 | vETH collateral | 5.00 vETH | Locked as collateral from the start |
-| vUSD received | 3000.00 vUSD | Free balance to use for emergency repayments |
 | vUSD debt | 7000.00 vUSD | Outstanding debt from the start |
 | Starting HF | ~1.11 | `(5.00 × 2000.00 × 78%) / 7000.00` |
 
@@ -176,7 +184,7 @@ The Sepolia contract provides an auditable record of inputs, actions and outcome
 
 ---
 
-## The frontend
+## Frontend
 
 ### Requirements
 
@@ -206,7 +214,9 @@ Output is in `frontend/dist/`.
 
 ---
 
-## The workflow example — automated-liquidation-protection-workflow
+## CRE Confidential Workflow Example
+
+**automated-liquidation-protection-workflow**
 
 A confidential CRE workflow that monitors your position on-chain and automatically repays debt or deposits collateral when the health factor drops below your private threshold.
 
@@ -221,6 +231,12 @@ A confidential CRE workflow that monitors your position on-chain and automatical
 - [Bun](https://bun.sh/) >= 1.2.21
 - CRE account with Early Access (for deployment; simulation works fine without it)
 - The wallet (`CRE_ETH_PRIVATE_KEY`) must have already called `join()` on the challenge contract
+
+### Strategy
+
+This example use a cron trigger. Will it be good? 
+Or an event log trigger when the price is updated is better?
+Up to you :) 
 
 ### Install Dependencies
 
@@ -376,3 +392,7 @@ The workflow now runs on its CRON schedule: every execution happens inside a rea
 > ⚠️ **Production reminder**: check if the template has logs exposing secret values inside the enclave for debugging. Remove every `runtime.log()` inside the TEE handler before any real deployment — anything logged from within a Confidential Workflow could leak the data the enclave is meant to protect.
 
 ## Have fun!
+
+We explained how to use a basic lending and borrowing protocol and create a strategy to avoid liquidation 24h, automatically, using CRE Confidential Workflows.
+
+Now you can do it in the real world!
