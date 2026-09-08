@@ -71,16 +71,18 @@ export const ERC20_ABI = [
   { name: "approve", type: "function", stateMutability: "nonpayable", inputs: [{ name: "spender", type: "address" }, { name: "amount", type: "uint256" }], outputs: [{ type: "bool" }] },
 ] as const;
 
+import { LENDING_ADDRESS, VETH_ADDRESS, VUSD_ADDRESS } from "../../addresses";
+
 // ─── Address helpers ─────────────────────────────────────────────────────────
 
 export function getLendingAddress(): `0x${string}` {
-  return (localStorage.getItem("lendingAddress") || import.meta.env.CONTRACT_ADDRESS || "0x63b918368a2c3c08f3b3eCEdc8eA6c49E674c4B7") as `0x${string}`;
+  return (localStorage.getItem("lendingAddress") || import.meta.env.CONTRACT_ADDRESS || LENDING_ADDRESS) as `0x${string}`;
 }
 
 export function getVethAddress(): `0x${string}` {
-  return (localStorage.getItem("vethAddress") || import.meta.env.VETH_ADDRESS || "0x89F0DF6D4629D494D599E03505C323537C24667a") as `0x${string}`;
+  return (localStorage.getItem("vethAddress") || import.meta.env.VETH_ADDRESS || VETH_ADDRESS) as `0x${string}`;
 }
 
 export function getVusdAddress(): `0x${string}` {
-  return (localStorage.getItem("vusdAddress") || import.meta.env.VUSD_ADDRESS || "0xC96c007023Ae2a23D097D5D95d4b91D6a501Da0b") as `0x${string}`;
+  return (localStorage.getItem("vusdAddress") || import.meta.env.VUSD_ADDRESS || VUSD_ADDRESS) as `0x${string}`;
 }
