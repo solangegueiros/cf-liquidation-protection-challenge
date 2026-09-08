@@ -635,6 +635,7 @@ interface RankEntry {
   collateral: bigint;
   debt: bigint;
   hf: bigint;
+  numOperations: bigint;
   cumulativeDebtTime: bigint;
 }
 
@@ -673,13 +674,14 @@ function RankingTable({ lendingAddress, connectedAddress, refreshTick }: Ranking
 
       const list: RankEntry[] = addresses.map((addr, i) => {
         const r = results[i];
-        if (r.status !== "success") return { address: addr, collateral: 0n, debt: 0n, hf: 0n, cumulativeDebtTime: 0n };
+        if (r.status !== "success") return { address: addr, collateral: 0n, debt: 0n, hf: 0n, numOperations: 0n, cumulativeDebtTime: 0n };
         const pos = r.result as UserPosition;
         return {
           address: addr,
           collateral: pos.collateral,
           debt: pos.debt,
           hf: pos.hf,
+          numOperations: pos.numOperations,
           cumulativeDebtTime: pos.cumulativeDebtTime,
         };
       });
@@ -736,6 +738,7 @@ function RankingTable({ lendingAddress, connectedAddress, refreshTick }: Ranking
                 <th>Debt</th>
                 <th>Health Factor</th>
                 <th>Status</th>
+                <th>#op</th>
                 <th>Debt-Time Score</th>
               </tr>
             </thead>
@@ -755,6 +758,7 @@ function RankingTable({ lendingAddress, connectedAddress, refreshTick }: Ranking
                     <td>{fmtUnits(e.debt)} vUSD</td>
                     <td className={hfClass(e.hf)}>{fmtHF(e.hf)}</td>
                     <td><span className={`badge ${badge.cls}`}>{badge.label}</span></td>
+                    <td style={{ textAlign: "center", fontSize: "0.85rem" }}>{e.numOperations.toString()}</td>
                     <td style={{ fontSize: "0.8rem", color: "var(--gray-400)" }}>{fmtDebtTime(e.cumulativeDebtTime)}</td>
                   </tr>
                 );
