@@ -721,12 +721,16 @@ function RankingTable({ lendingAddress, connectedAddress, refreshTick }: Ranking
 
   return (
     <div className="panel">
-      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "1rem" }}>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "0.5rem" }}>
         <h2 className="subhead" style={{ margin: 0 }}>Leaderboard</h2>
         <button className="btn btn-sm btn-secondary" onClick={load} disabled={isLoading}>
           {isLoading ? "Loading…" : "Refresh"}
         </button>
       </div>
+
+      <p style={{ marginTop: 0, marginBottom: "1rem", fontSize: "0.85rem", color: "var(--gray-400)", fontStyle: "italic" }}>
+        The Leaderboard is not the final winner, it is part of the evaluation, which will also count your project itself, including the source code.
+      </p>
 
       {isLoading && <div className="muted">Loading participants…</div>}
       {!isLoading && entries.length === 0 && (
@@ -778,9 +782,6 @@ function RankingTable({ lendingAddress, connectedAddress, refreshTick }: Ranking
         </div>
       )}
 
-      <p style={{ marginTop: "1rem", fontSize: "0.85rem", color: "var(--gray-400)", fontStyle: "italic" }}>
-        The Leaderboard is not the final winner, it is part of the evaluation, which will also count your project itself, including the source code.
-      </p>
     </div>
   );
 }
